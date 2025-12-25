@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Add these meta tags for real-time features -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: 'unsafe-inline' 'unsafe-eval'">
+    <meta name="description" content="Real-time Trading Dashboard with Live Market Data">
+    <meta name="theme-color" content="#0a0e17">
+    <meta name="description" content="Real-time Trading Dashboard with Live Market Data">
+    <title>MarketMind Pro™ | Trader's Command Center</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/themes.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="assets/favicon.ico">
+    <link rel="stylesheet" href="css/real-charts.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="app-header">
+        <div class="logo">
+            <i class="fas fa-brain logo-icon"></i>
+            <div class="logo-text">MarketMind Pro™</div>
+            <div class="version-badge">v2.1</div>
+        </div>
+
+        <div class="header-controls">
+            <div class="clock" id="liveClock">--:--:--</div>
+            <div class="keyboard-hint">
+                <i class="fas fa-keyboard"></i> <kbd>H</kbd> for shortcuts
+            </div>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <div class="main-content">
+            <!-- Market Dashboard -->
+            <section class="module dashboard-module">
+                <div class="module-header">
+                    <div class="module-title">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Multi-Market Dashboard</span>
+                    </div>
+                    <div class="market-status open" id="marketStatus">
+                        <i class="fas fa-circle"></i>
+                        <span>Market Open</span>
+                    </div>
+                </div>
+
+                <div class="market-tabs" id="marketTabs">
+                    <button class="market-tab active" data-market="BTC" aria-label="Switch to Bitcoin">
+                        <i class="fab fa-bitcoin"></i> BTC/USD
+                    </button>
+                    <button class="market-tab" data-market="GOLD" aria-label="Switch to Gold">
+                        <i class="fas fa-gem"></i> GOLD
+                    </button>
+                    <button class="market-tab" data-market="NIFTY" aria-label="Switch to Nifty">
+                        <i class="fas fa-chart-bar"></i> NIFTY 50
+                    </button>
+                    <button class="market-tab" data-market="BANKNIFTY" aria-label="Switch to Bank Nifty">
+                        <i class="fas fa-university"></i> BANKNIFTY
+                    </button>
+                </div>
+
+                <div class="market-data">
+                    <div class="skeleton-loader" id="marketLoader">
+                        <div class="spinner"></div>
+                        <div>Loading market data...</div>
+                    </div>
+
+                    <div class="market-grid" id="marketGrid">
+                        <!-- Market data will be populated by JS -->
+                    </div>
+
+                    <div class="market-summary">
+                        <div class="summary-item">
+                            <span class="summary-label">Market Sentiment:</span>
+                            <span class="summary-value positive" id="marketSentiment">Bullish</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Volume Trend:</span>
+                            <span class="summary-value" id="volumeTrend">Increasing</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Charting Engine -->
+            <section class="module chart-module">
+                <div class="module-header">
+                    <div class="module-title">
+                        <i class="fas fa-chart-candlestick"></i>
+                        <span>Advanced Chart</span>
+                        <span class="market-indicator" id="chartMarket">BTC/USD</span>
+                    </div>
+                    <div class="chart-tools">
+                        <button class="chart-tool-btn" id="drawSRBtn" title="Draw Support/Resistance">
+                            <i class="fas fa-ruler-combined"></i> S/R
+                        </button>
+                        <button class="chart-tool-btn" id="clearDrawingsBtn" title="Clear All Drawings">
+                            <i class="fas fa-trash"></i> Clear
+                        </button>
+                    </div>
+                </div>
+
+                <div class="module-content">
+                    <div class="chart-container">
+                        <canvas id="chartCanvas"></canvas>
+                        <div class="chart-crosshair" id="crosshair"></div>
+                        <div class="chart-tooltip" id="chartTooltip"></div>
+                        <div class="chart-watermark">MarketMind Pro™</div>
+                    </div>
+
+                    <div class="chart-controls">
+                        <div class="timeframe-group">
+                            <button class="timeframe-btn active" data-tf="1m">1m</button>
+                            <button class="timeframe-btn" data-tf="5m">5m</button>
+                            <button class="timeframe-btn" data-tf="15m">15m</button>
+                            <button class="timeframe-btn" data-tf="1H">1H</button>
+                            <button class="timeframe-btn" data-tf="4H">4H</button>
+                            <button class="timeframe-btn" data-tf="1D">1D</button>
+                        </div>
+                        <div class="chart-zoom">
+                            <button class="zoom-btn" id="zoomIn" title="Zoom In">
+                                <i class="fas fa-search-plus"></i>
+                            </button>
+                            <button class="zoom-btn" id="zoomOut" title="Zoom Out">
+                                <i class="fas fa-search-minus"></i>
+                            </button>
+                            <button class="zoom-btn" id="resetZoom" title="Reset View">
+                                <i class="fas fa-expand-arrows-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Strategy Builder -->
+            <section class="module strategy-module">
+                <div class="module-header">
+                    <div class="module-title">
+                        <i class="fas fa-robot"></i>
+                        <span>Strategy Builder</span>
+                    </div>
+                    <div class="module-subtitle">
+                        <span id="strategyName">RSI Strategy v1.0</span>
+                    </div>
+                </div>
+
+                <div class="module-content">
+                    <form class="strategy-form" id="strategyForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-wave-square"></i> Indicator
+                                </label>
+                                <select class="form-select" id="indicatorSelect">
+                                    <option value="RSI">RSI (Relative Strength Index)</option>
+                                    <option value="EMA">EMA (Exponential Moving Average)</option>
+                                    <option value="VWAP">VWAP (Volume Weighted Average Price)</option>
+                                    <option value="MACD">MACD</option>
+                                    <option value="BOLLINGER">Bollinger Bands</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-signal"></i> Indicator Period
+                                </label>
+                                <input type="range" class="form-slider" id="indicatorPeriod" min="5" max="50"
+                                    value="14">
+                                <div class="slider-value" id="periodValue">14</div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-sign-in-alt"></i> Entry Condition
+                                </label>
+                                <select class="form-select" id="entryCondition">
+                                    <option value="cross_above">Cross Above Signal Line</option>
+                                    <option value="cross_below">Cross Below Signal Line</option>
+                                    <option value="overbought">Overbought Reversal (RSI > 70)</option>
+                                    <option value="oversold">Oversold Reversal (RSI < 30)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-sign-out-alt"></i> Exit Condition
+                                </label>
+                                <select class="form-select" id="exitCondition">
+                                    <option value="trailing_stop">Trailing Stop Loss</option>
+                                    <option value="fixed_target">Fixed Take Profit</option>
+                                    <option value="signal_reversal">Signal Reversal</option>
+                                    <option value="time_based">Time-based Exit</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-balance-scale"></i> Risk-Reward Ratio
+                                </label>
+                                <select class="form-select" id="riskReward">
+                                    <option value="1:1">1:1</option>
+                                    <option value="1:2" selected>1:2</option>
+                                    <option value="1:3">1:3</option>
+                                    <option value="1:4">1:4</option>
+                                    <option value="1:5">1:5</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-sliders-h"></i> Success Rate Target (%)
+                                </label>
+                                <input type="range" class="form-slider" id="successTarget" min="40" max="90" value="65">
+                                <div class="slider-value" id="successValue">65%</div>
+                            </div>
+                        </div>
+
+                        <div class="strategy-results">
+                            <div class="results-header">
+                                <div class="results-title">
+                                    <i class="fas fa-chart-bar"></i> Backtest Results
+                                    <span class="results-subtitle">Last 30 days simulation</span>
+                                </div>
+                                <button type="button" class="backtest-btn" id="runBacktest">
+                                    <i class="fas fa-play"></i> Run Backtest
+                                </button>
+                            </div>
+
+                            <div class="results-grid" id="resultsGrid">
+                                <!-- Results will be populated by JS -->
+                            </div>
+
+                            <div class="equity-section">
+                                <div class="section-title">Equity Curve</div>
+                                <div class="equity-curve">
+                                    <canvas id="equityCanvas"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Trading Journal -->
+            <section class="module journal-module">
+                <div class="module-header">
+                    <div class="module-title">
+                        <i class="fas fa-book"></i>
+                        <span>Trading Journal</span>
+                    </div>
+                    <div class="module-actions">
+                        <button class="action-btn" id="exportJournal" title="Export Journal">
+                            <i class="fas fa-file-export"></i>
+                        </button>
+                        <button class="action-btn" id="filterJournal" title="Filter Trades">
+                            <i class="fas fa-filter"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="module-content">
+                    <div class="journal-controls">
+                        <button class="add-trade-btn" id="addTradeBtn">
+                            <i class="fas fa-plus"></i> Add Trade
+                        </button>
+
+                        <div class="journal-summary">
+                            <span id="tradeCount">0 trades</span>
+                            <span class="summary-divider">|</span>
+                            <span id="journalPeriod">All Time</span>
+                        </div>
+                    </div>
+
+                    <div class="journal-stats" id="journalStats">
+                        <!-- Stats will be populated by JS -->
+                    </div>
+
+                    <div class="trades-table-container">
+                        <table class="trades-table" id="tradesTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Market</th>
+                                    <th>Side</th>
+                                    <th>Entry</th>
+                                    <th>Exit</th>
+                                    <th>P&L</th>
+                                    <th>Emotion</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tradesTableBody">
+                                <!-- Trades will be populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="journal-footer">
+                        <div class="pagination">
+                            <button class="page-btn" disabled>
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <span class="page-info">Page 1 of 1</span>
+                            <button class="page-btn" disabled>
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Risk Management Panel -->
+            <section class="module risk-module">
+                <div class="module-header">
+                    <div class="module-title">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Risk Management Panel</span>
+                    </div>
+                    <div class="risk-score">
+                        <span class="score-label">Risk Score:</span>
+                        <span class="score-value low" id="riskScore">24</span>
+                    </div>
+                </div>
+
+                <div class="module-content">
+                    <div class="risk-calculator">
+                        <div class="calculator-section">
+                            <h3 class="section-title">
+                                <i class="fas fa-calculator"></i> Position Sizing Calculator
+                            </h3>
+
+                            <div class="input-row">
+                                <div class="input-group">
+                                    <label class="form-label">
+                                        <i class="fas fa-wallet"></i> Account Balance ($)
+                                    </label>
+                                    <input type="number" class="form-input" id="capitalInput" value="10000" min="100"
+                                        step="100">
+                                </div>
+
+                                <div class="input-group">
+                                    <label class="form-label">
+                                        <i class="fas fa-stop-circle"></i> Stop Loss (%)
+                                    </label>
+                                    <input type="number" class="form-input" id="stopLossInput" value="2" min="0.1"
+                                        max="20" step="0.1">
+                                </div>
+                            </div>
+
+                            <div class="slider-container">
+                                <label class="form-label">
+                                    <i class="fas fa-exclamation-triangle"></i> Risk per Trade (%)
+                                    <span class="slider-hint">Higher risk = Higher potential reward/loss</span>
+                                </label>
+                                <div class="slider-wrapper">
+                                    <input type="range" class="risk-slider" id="riskSlider" min="0.1" max="5" step="0.1"
+                                        value="1">
+                                    <div class="slider-ticks">
+                                        <span>0.1%</span>
+                                        <span>1%</span>
+                                        <span>2%</span>
+                                        <span>3%</span>
+                                        <span>4%</span>
+                                        <span>5%</span>
+                                    </div>
+                                </div>
+                                <div class="slider-value">
+                                    <span id="riskValue">1.0%</span>
+                                    <span class="risk-amount">Risk Amount: $<span id="riskAmount">100.00</span></span>
+                                </div>
+                            </div>
+
+                            <div class="results-card">
+                                <div class="result-title">
+                                    <i class="fas fa-chart-pie"></i> Position Size Calculation
+                                </div>
+                                <div class="result-grid">
+                                    <div class="result-item">
+                                        <div class="result-label">Position Size</div>
+                                        <div class="result-value" id="positionSize">$5,000.00</div>
+                                    </div>
+                                    <div class="result-item">
+                                        <div class="result-label">Units/Contracts</div>
+                                        <div class="result-value" id="positionUnits">0.0769 BTC</div>
+                                    </div>
+                                    <div class="result-item">
+                                        <div class="result-label">Max Loss</div>
+                                        <div class="result-value negative" id="maxLoss">-$100.00</div>
+                                    </div>
+                                    <div class="result-item">
+                                        <div class="result-label">Max Gain (1:2 RR)</div>
+                                        <div class="result-value positive" id="maxGain">+$200.00</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="visualization-section">
+                            <h3 class="section-title">
+                                <i class="fas fa-chart-line"></i> Risk Visualization
+                            </h3>
+
+                            <div class="risk-meter">
+                                <div class="meter-labels">
+                                    <span>Low Risk</span>
+                                    <span>Medium Risk</span>
+                                    <span>High Risk</span>
+                                </div>
+                                <div class="meter-bar">
+                                    <div class="risk-indicator" id="riskIndicator"></div>
+                                    <div class="risk-level" id="riskLevel">Low Risk</div>
+                                </div>
+                            </div>
+
+                            <div class="risk-warning hidden" id="riskWarning">
+                                <div class="warning-icon">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="warning-content">
+                                    <div class="warning-title">Risk Warning</div>
+                                    <div class="warning-text">Risk per trade exceeds 2%. Consider reducing position size
+                                        or adjusting stop loss.</div>
+                                </div>
+                            </div>
+
+                            <div class="risk-tips">
+                                <div class="tip-title">
+                                    <i class="fas fa-lightbulb"></i> Risk Management Tips
+                                </div>
+                                <ul class="tip-list">
+                                    <li>Never risk more than 2% of your capital on a single trade</li>
+                                    <li>Use stop-loss orders for every position</li>
+                                    <li>Diversify across different markets and timeframes</li>
+                                    <li>Regularly review and adjust your risk parameters</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <div class="footer-logo">
+                    <i class="fas fa-brain"></i> MarketMind Pro™
+                </div>
+                <div class="footer-text">
+                    Professional Trading Dashboard v2.1
+                </div>
+            </div>
+
+            <div class="footer-section">
+                <div class="footer-links">
+                    <button class="footer-link" id="showShortcuts">
+                        <i class="fas fa-keyboard"></i> Keyboard Shortcuts
+                    </button>
+                    <button class="footer-link" id="showAbout">
+                        <i class="fas fa-info-circle"></i> About
+                    </button>
+                </div>
+            </div>
+
+            <div class="footer-section">
+                <div class="status-indicators">
+                    <div class="status-item">
+                        <span class="status-dot online"></span>
+                        <span>WebSocket: Connected</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-dot"></span>
+                        <span>Data: Live</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>© 2024 MarketMind Pro™. Data is simulated for demonstration purposes. Not financial advice.</p>
+            <p>Use keyboard shortcuts: <kbd>H</kbd> for help, <kbd>1-4</kbd> for markets, <kbd>C</kbd> for chart,
+                <kbd>J</kbd> for journal
+            </p>
+        </div>
+    </footer>
+
+    <!-- Add Trade Modal -->
+    <div class="modal-overlay" id="tradeModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-plus-circle"></i> Add New Trade
+                </div>
+                <button class="modal-close" id="closeModal" aria-label="Close modal">
+                    &times;
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <form id="tradeForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Market</label>
+                            <select class="form-select" id="tradeMarket" required>
+                                <option value="BTC">BTC/USD</option>
+                                <option value="GOLD">GOLD</option>
+                                <option value="NIFTY">NIFTY 50</option>
+                                <option value="BANKNIFTY">BANKNIFTY</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Trade Side</label>
+                            <div class="trade-side-selector">
+                                <button type="button" class="side-btn buy active" data-side="buy">
+                                    <i class="fas fa-arrow-up"></i> Buy/Long
+                                </button>
+                                <button type="button" class="side-btn sell" data-side="sell">
+                                    <i class="fas fa-arrow-down"></i> Sell/Short
+                                </button>
+                            </div>
+                            <input type="hidden" id="tradeSide" value="buy">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Entry Price</label>
+                            <input type="number" class="form-input" id="entryPrice" step="0.01" min="0" required>
+                            <div class="input-hint">Current: <span id="currentPrice">$65,234.56</span></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Exit Price</label>
+                            <input type="number" class="form-input" id="exitPrice" step="0.01" min="0" required>
+                            <div class="input-hint">Leave blank for open position</div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Stop Loss</label>
+                            <input type="number" class="form-input" id="stopLoss" step="0.01" min="0" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Take Profit</label>
+                            <input type="number" class="form-input" id="target" step="0.01" min="0" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Quantity/Size</label>
+                            <input type="number" class="form-input" id="tradeSize" step="0.01" min="0" value="1"
+                                required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Trade Notes</label>
+                            <textarea class="form-textarea" id="tradeNotes"
+                                placeholder="Add any notes about this trade..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <label class="form-label">Emotion During Trade</label>
+                        <div class="emotion-selector">
+                            <button type="button" class="emotion-option" data-emotion="neutral" title="Neutral">
+                                <span class="emotion-icon">😐</span>
+                                <span class="emotion-label">Neutral</span>
+                            </button>
+                            <button type="button" class="emotion-option" data-emotion="fear" title="Fear">
+                                <span class="emotion-icon">😨</span>
+                                <span class="emotion-label">Fear</span>
+                            </button>
+                            <button type="button" class="emotion-option selected" data-emotion="greed" title="Greed">
+                                <span class="emotion-icon">😄</span>
+                                <span class="emotion-label">Greed</span>
+                            </button>
+                            <button type="button" class="emotion-option" data-emotion="anger" title="Anger">
+                                <span class="emotion-icon">😡</span>
+                                <span class="emotion-label">Anger</span>
+                            </button>
+                            <button type="button" class="emotion-option" data-emotion="confusion" title="Confusion">
+                                <span class="emotion-icon">😕</span>
+                                <span class="emotion-label">Confusion</span>
+                            </button>
+                        </div>
+                        <input type="hidden" id="emotionInput" value="greed">
+                    </div>
+
+                    <div class="trade-preview">
+                        <div class="preview-title">Trade Preview</div>
+                        <div class="preview-grid">
+                            <div class="preview-item">
+                                <span>Risk:</span>
+                                <span id="previewRisk">1.0%</span>
+                            </div>
+                            <div class="preview-item">
+                                <span>Reward:</span>
+                                <span id="previewReward">2.0%</span>
+                            </div>
+                            <div class="preview-item">
+                                <span>RR Ratio:</span>
+                                <span id="previewRR">1:2</span>
+                            </div>
+                            <div class="preview-item">
+                                <span>P&L:</span>
+                                <span id="previewPL" class="positive">+$200.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button type="button" class="modal-btn secondary" id="cancelTrade">
+                            Cancel
+                        </button>
+                        <button type="submit" class="modal-btn primary">
+                            <i class="fas fa-save"></i> Save Trade
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keyboard Shortcuts Modal -->
+    <div class="modal-overlay" id="shortcutsModal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-keyboard"></i> Keyboard Shortcuts
+                </div>
+                <button class="modal-close" id="closeShortcuts">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="shortcuts-grid">
+                    <div class="shortcut-category">
+                        <h3><i class="fas fa-chart-line"></i> Navigation</h3>
+                        <div class="shortcut-item">
+                            <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd>
+                            <span>Switch Market Tabs</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>C</kbd>
+                            <span>Focus Chart</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>J</kbd>
+                            <span>Open Journal</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>S</kbd>
+                            <span>Strategy Builder</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>R</kbd>
+                            <span>Risk Panel</span>
+                        </div>
+                    </div>
+
+                    <div class="shortcut-category">
+                        <h3><i class="fas fa-cogs"></i> Actions</h3>
+                        <div class="shortcut-item">
+                            <kbd>A</kbd>
+                            <span>Add Trade</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>B</kbd>
+                            <span>Run Backtest</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>F</kbd>
+                            <span>Full Screen Chart</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>E</kbd>
+                            <span>Export Data</span>
+                        </div>
+                    </div>
+
+                    <div class="shortcut-category">
+                        <h3><i class="fas fa-palette"></i> Interface</h3>
+                        <div class="shortcut-item">
+                            <kbd>T</kbd>
+                            <span>Toggle Theme</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>H</kbd>
+                            <span>Show/Hide Help</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>ESC</kbd>
+                            <span>Close Modal/Cancel</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>?</kbd>
+                            <span>This Help Dialog</span>
+                        </div>
+                    </div>
+
+                    <div class="shortcut-category">
+                        <h3><i class="fas fa-chart-candlestick"></i> Chart Controls</h3>
+                        <div class="shortcut-item">
+                            <kbd>+</kbd> <kbd>-</kbd>
+                            <span>Zoom In/Out</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>←</kbd> <kbd>→</kbd>
+                            <span>Pan Chart</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>D</kbd>
+                            <span>Drawing Mode</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>Space</kbd>
+                            <span>Reset View</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="shortcuts-footer">
+                    <p>All shortcuts work globally except when typing in input fields.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-content">
+            <div class="loading-logo">
+                <i class="fas fa-brain"></i>
+                <span>MarketMind Pro™</span>
+            </div>
+            <div class="loading-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text">Initializing Trading Dashboard...</div>
+            </div>
+            <div class="loading-tips">
+                <div class="tip">
+                    <i class="fas fa-lightbulb"></i>
+                    <span>Tip: Use keyboard shortcuts for faster navigation</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification System -->
+    <div class="notification-container" id="notificationContainer"></div>
+
+    <!-- JavaScript Files -->
+    <script src="js/utils.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/strategy.js"></script>
+    <script src="js/journal.js"></script>
+    <script src="js/risk.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/real-charts.js"></script>
+    <!-- TradingView Lightweight Charts (CDN) -->
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <!-- Optional: Chart export library -->
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+</body>
+
+</html>
