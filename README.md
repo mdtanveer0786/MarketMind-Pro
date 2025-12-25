@@ -8,7 +8,7 @@
 A **professional-grade trading dashboard** with **real-time market data**, built entirely with vanilla HTML, CSS, and JavaScript. No frameworks, no libraries - just pure frontend engineering.
 
 ## 🚀 Live Demo
-[Try Live Demo](https://your-demo-link.com) 
+[Try Live Demo](https://market-mind-pro.vercel.app/) 
 
 ## ✨ Features
 
