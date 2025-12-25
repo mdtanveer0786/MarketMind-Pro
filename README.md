@@ -396,7 +396,7 @@ Having issues? Here's how to get help:
 
 ## 🌟 Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/marketmind-pro&type=Date)](https://star-history.com/#yourusername/marketmind-pro&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/marketmind-pro&type=Date)](https://github.com/mdtanveer0786/MarketMind-Pro)
 
 ---
 
